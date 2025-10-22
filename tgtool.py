@@ -242,16 +242,16 @@ class Graph:
             print(f"⚠️ Uzel '{node}' v tomto grafu neexistuje!")
             return
 
-        print(f"===== Vlastnosti uzlu ({node}) =====")
-        print(f"1. Následníci uzlu ({node}):", self.get_node_successors(node))
-        print(f"2. Předchůdci uzlu ({node}):", self.get_node_predecessors(node))
-        print(f"3. Sousední uzly ({node}):", self.get_node_neighbors(node))
-        print(f"4. Výstupní okolí uzlu ({node}):", self.get_node_out_neighborhood(node))
-        print(f"5. Vstupní okolí uzlu ({node}):", self.get_node_in_neighborhood(node))
-        print(f"6. Okolí uzlu ({node}):", self.get_node_neighborhood(node))
-        print(f"7. Výstupní stupeň uzlu ({node}):", self.get_node_out_degree(node))
-        print(f"8. Vstupní stupeň uzlu ({node}):", self.get_node_in_degree(node))
-        print(f"9. Stupeň uzlu ({node}):", self.get_node_degree(node), "\n")
+        print(f"====== Vlastnosti uzlu ({node}) ======")
+        print(f"{'1. Následníci uzlu        Ug+(' + str(node) + ')':<35}: {self.get_node_successors(node)}")
+        print(f"{'2. Předchůdci uzlu        Ug-(' + str(node) + ')':<35}: {self.get_node_predecessors(node)}")
+        print(f"{'3. Sousední uzly          Ug(' + str(node) + ')':<35}: {self.get_node_neighbors(node)}")
+        print(f"{'4. Výstupní okolí uzlu    Hg+(' + str(node) + ')':<35}: {self.get_node_out_neighborhood(node)}")
+        print(f"{'5. Vstupní okolí uzlu     Hg-(' + str(node) + ')':<35}: {self.get_node_in_neighborhood(node)}")
+        print(f"{'6. Okolí uzlu             Hg(' + str(node) + ')':<35}: {self.get_node_neighborhood(node)}")
+        print(f"{'7. Výstupní stupeň uzlu   dg+(' + str(node) + ')':<35}: {self.get_node_out_degree(node)}")
+        print(f"{'8. Vstupní stupeň uzlu    dg-(' + str(node) + ')':<35}: {self.get_node_in_degree(node)}")
+        print(f"{'9. Stupeň uzlu            dg(' + str(node) + ')':<35}: {self.get_node_degree(node)}\n")
 
     """
     =============== Vlastnosti grafu ===============
@@ -539,31 +539,30 @@ class Graph:
         edges_str = shorten_list(self.edges, 3)
 
         def yes_no(value: bool):
-            return "✅Ano" if value else "❌Ne"
+            return "✅ Ano" if value else "❌ Ne"
 
         output = (
             f"\n====================| GRAF ({self.file_path}) |====================\n"
             f"Uzly  ({(str(len(self.nodes)) + ')').ljust(8)}{nodes_str}\n"
             f"Hrany ({(str(len(self.edges)) + ')').ljust(8)}{edges_str}\n"
-            f"\na. {'Ohodnocený'.ljust(17)} {yes_no(self.is_weighted_graph()).ljust(7)}  | Hrany mají číselnou váhu\n"
-            f"b. {'Orientovaný'.ljust(17)} {yes_no(self.is_directed_graph()).ljust(7)}  | Hrany mají určený směr (hrany jsou *uspořádané* dvojice uzlů)\n"
+            f"\na. {'Ohodnocený'.ljust(16)}: {yes_no(self.is_weighted_graph()).ljust(7)}  | Hrany mají číselnou váhu\n"
+            f"b. {'Orientovaný'.ljust(16)}: {yes_no(self.is_directed_graph()).ljust(7)}  | Hrany mají určený směr (hrany jsou *uspořádané* dvojice uzlů)\n"
         )
 
         if self.directed:
-            output += (f"c. {'Slabě souvislý'.ljust(17)} {yes_no(self.is_weakly_connected_graph()).ljust(7)}  | Mezi každými dvěma vrcholy existuje sled, pokud nebereme v potaz orientaci hran (neexistuje žádný nepropojený uzel)\n"
-                       f"   {'Silně souvislý'.ljust(17)} {yes_no(self.is_strongly_connected_graph()).ljust(7)}  | Mezi každými dvěma vrcholy existuje sled při zachování orientace hran (z každého vrcholu se dostanu do všech ostatních)\n")
+            output += (f"c. {'Slabě souvislý'.ljust(16)}: {yes_no(self.is_weakly_connected_graph()).ljust(7)}  | Mezi každými dvěma vrcholy existuje sled, pokud nebereme v potaz orientaci hran (neexistuje žádný nepropojený uzel)\n"
+                       f"   {'Silně souvislý'.ljust(16)}: {yes_no(self.is_strongly_connected_graph()).ljust(7)}  | Mezi každými dvěma vrcholy existuje sled při zachování orientace hran (z každého vrcholu se dostanu do všech ostatních)\n")
         else:
-            output += f"c. {'Souvislý'.ljust(17)} {yes_no(self.is_connected_graph()).ljust(7)}  | Mezi každými dvěma vrcholy existuje sled (o libovolné délce)\n"
+            output += f"c. {'Souvislý'.ljust(16)}: {yes_no(self.is_connected_graph()).ljust(7)}  | Mezi každými dvěma vrcholy existuje sled (o libovolné délce)\n"
 
         output += (
-            f"d. {'Prostý'.ljust(17)} {yes_no(self.is_plain_graph()).ljust(7)}  | Neobsahuje násobné hrany\n"
-            f"e. {'Jednoduchý'.ljust(17)} {yes_no(self.is_simple_graph()).ljust(7)}  | Neobsahuje násobné hrany (tj. je prostý) a zároveň neobsahuje smyčky\n"
-            f"f. {'Rovinný'.ljust(17)} {yes_no(self.is_planar_graph()).ljust(7)}  | Lze nakreslit do roviny tak, že se žádné dvě hrany neprotínají\n"
-            f"g. {'Konečný'.ljust(17)} {yes_no(self.is_finite_graph()).ljust(7)}  | Množina uzlů a hran má končený počet prvků\n"
-            f"h. {'Úplný'.ljust(17)} {yes_no(self.is_complete_graph()).ljust(7)}  | Každé dva uzly jsou přímo propojeny v obou směrech\n"
-            f"i. {'Regulární'.ljust(17)} {yes_no(self.is_regular_graph()).ljust(7)}  | Všechny uzly mají stejný stupeň\n"
-            f"j. {'Bipartitní'.ljust(17)} {yes_no(self.is_bipartite_graph()).ljust(7)}  | Množinu uzlů lze rodělit na dvě disjunktní množiny, uvnitř kterých nejsou žádné dva uzly propojené\n"
-            "\n"
+            f"d. {'Prostý'.ljust(16)}: {yes_no(self.is_plain_graph()).ljust(7)}  | Neobsahuje násobné hrany\n"
+            f"e. {'Jednoduchý'.ljust(16)}: {yes_no(self.is_simple_graph()).ljust(7)}  | Neobsahuje násobné hrany (tj. je prostý) a zároveň neobsahuje smyčky\n"
+            f"f. {'Rovinný'.ljust(16)}: {yes_no(self.is_planar_graph()).ljust(7)}  | Lze nakreslit do roviny tak, že se žádné dvě hrany neprotínají\n"
+            f"g. {'Konečný'.ljust(16)}: {yes_no(self.is_finite_graph()).ljust(7)}  | Množina uzlů a hran má končený počet prvků\n"
+            f"h. {'Úplný'.ljust(16)}: {yes_no(self.is_complete_graph()).ljust(7)}  | Každé dva uzly jsou přímo propojeny v obou směrech\n"
+            f"i. {'Regulární'.ljust(16)}: {yes_no(self.is_regular_graph()).ljust(7)}  | Všechny uzly mají stejný stupeň\n"
+            f"j. {'Bipartitní'.ljust(16)}: {yes_no(self.is_bipartite_graph()).ljust(7)}  | Množinu uzlů lze rodělit na dvě disjunktní množiny, uvnitř kterých nejsou žádné dva uzly propojené\n"
         )
 
         return output
@@ -644,6 +643,8 @@ if __name__ == "__main__":
     for i in range(1, 21):
         g = parse_graph(f"samples/{str(i).zfill(2)}.tg")
         print(g)
+
+        g.print_node_characteristic("A")
 
 
 
