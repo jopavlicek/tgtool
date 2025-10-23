@@ -441,3 +441,228 @@ class Graph:
                     queue.append(neighbor)
 
         return visited
+
+    # ===================| Matice sousednosti |===================
+
+    def get_adjacency_matrix(self) -> list[list[int | float]]:
+        """Vrací matici sousednosti grafu (2D seznam).
+
+        - Neorientovaný graf: A[i][j] = 1 pokud existuje hrana mezi uzly i a j.
+        - Orientovaný graf:   A[i][j] = 1 pokud existuje hrana z uzlu i do uzlu j.
+        - Ohodnocený graf:    místo 1 se ukládá váha hrany.
+        """
+        n = len(self.nodes)
+        matrix = [[0 for _ in range(n)] for _ in range(n)]
+        index = {node: i for i, node in enumerate(sorted(self.nodes, key=lambda n: n.name))}
+
+        for edge in self.edges:
+            i = index[edge.source]
+            j = index[edge.target]
+
+            value = getattr(edge, "weight", 1) if self.is_edge_weighted else 1
+            matrix[i][j] = value
+
+            if not self.is_directed:
+                matrix[j][i] = value
+
+        return matrix
+
+    def print_adjacency_matrix(self) -> None:
+        """Vypíše matici sousednosti."""
+        nodes_sorted = sorted(self.nodes, key=lambda n: n.name)
+        matrix = self.get_adjacency_matrix()
+
+        header = "    " + "  ".join(f"{node.name:>3}" for node in nodes_sorted)
+        print("=== MATICE SOUSEDNOSTI ===")
+        print(header)
+        for i, row in enumerate(matrix):
+            print(f"{nodes_sorted[i].name:>3} " + "  ".join(f"{val:>3}" for val in row))
+        print()
+
+    # ===================| Znaménková matice sousednosti |===================
+
+    def get_signed_adjacency_matrix(self) -> list[list[int]]:
+        """Vrací znaménkovou matici sousednosti.
+        - U neorientovaných grafů: 1 pokud je hrana mezi uzly, jinak 0
+        - U orientovaných grafů: 1 pro hranu z i→j, -1 pro hranu z j→i, jinak 0
+        """
+        n = len(self.nodes)
+        matrix = [[0 for _ in range(n)] for _ in range(n)]
+        index = {node: i for i, node in enumerate(sorted(self.nodes, key=lambda n: n.name))}
+
+        for edge in self.edges:
+            i = index[edge.source]
+            j = index[edge.target]
+
+            if self.is_directed:
+                # Hrana z i -> j
+                matrix[i][j] = 1
+                # Pro přehlednost můžeme zapsat i opačný směr jako -1, pokud neexistuje obrácená hrana
+                if matrix[j][i] == 0:
+                    matrix[j][i] = -1
+            else:
+                matrix[i][j] = 1
+                matrix[j][i] = 1
+
+        return matrix
+
+    def print_signed_adjacency_matrix(self) -> None:
+        """Vypíše znaménkovou matici."""
+        nodes_sorted = sorted(self.nodes, key=lambda n: n.name)
+        matrix = self.get_signed_adjacency_matrix()
+
+        header = "    " + "  ".join(f"{node.name:>3}" for node in nodes_sorted)
+        print("=== ZNAMÉNKOVÁ MATICE ===")
+        print(header)
+        for i, row in enumerate(matrix):
+            print(f"{nodes_sorted[i].name:>3} " + "  ".join(f"{val:>3}" for val in row))
+        print()
+
+    # ===================| Matice incidence |===================
+
+    def get_incidence_matrix(self) -> list[list[int | float]]:
+        """Vrací matici incidence (uzly × hrany).
+        - Neorientovaný graf: 1 pokud se uzel účastní hrany, 2 pro smyčku
+        - Orientovaný graf:  -1 pro zdroj, +1 pro cíl
+        """
+        nodes_sorted = sorted(self.nodes, key=lambda n: n.name)
+        n = len(nodes_sorted)
+        m = len(self.edges)
+        matrix = [[0 for _ in range(m)] for _ in range(n)]
+        node_index = {node: i for i, node in enumerate(nodes_sorted)}
+
+        for j, edge in enumerate(self.edges):
+            u = node_index[edge.source]
+            v = node_index[edge.target]
+
+            if self.is_directed:
+                # Směr: source -> target
+                matrix[u][j] = -1
+                matrix[v][j] = 1
+            else:
+                # Neorientovaný graf
+                if edge.source == edge.target:
+                    matrix[u][j] = 2  # Smyčka
+                else:
+                    matrix[u][j] = 1
+                    matrix[v][j] = 1
+
+        return matrix
+
+    def print_incidence_matrix(self) -> None:
+        """Vypíše matici incidence."""
+        nodes_sorted = sorted(self.nodes, key=lambda n: n.name)
+        matrix = self.get_incidence_matrix()
+
+        header = "    " + "  ".join(f"{edge.name or f'e{j+1}':>4}" for j, edge in enumerate(self.edges))
+        print("=== MATICE INCIDENCE ===")
+        print(header)
+        for i, row in enumerate(matrix):
+            print(f"{nodes_sorted[i].name:>3} " + "  ".join(f"{val:>4}" for val in row))
+        print()
+
+    # ===================| Matice délek |===================
+
+    def get_distance_matrix(self) -> list[list[float]]:
+        """Vrací matici délek (nejkratších vzdáleností mezi uzly)
+        pomocí Floyd–Warshallova algoritmu.
+        """
+        nodes_sorted = sorted(self.nodes, key=lambda n: n.name)
+        n = len(nodes_sorted)
+        index = {node: i for i, node in enumerate(nodes_sorted)}
+
+        # Inicializace matice vzdáleností
+        dist = [[float("inf") for _ in range(n)] for _ in range(n)]
+
+        # Vzdálenost z uzlu do sebe = 0
+        for i in range(n):
+            dist[i][i] = 0
+
+        # Nastavení délek hran
+        for edge in self.edges:
+            i = index[edge.source]
+            j = index[edge.target]
+            weight = getattr(edge, "weight", 1) if self.is_edge_weighted else 1
+            dist[i][j] = min(dist[i][j], weight)  # pokud je víc hran, vezmi kratší
+
+            if not self.is_directed:
+                dist[j][i] = min(dist[j][i], weight)
+
+        # Floyd–Warshall: výpočet nejkratších vzdáleností
+        for k in range(n):
+            for i in range(n):
+                for j in range(n):
+                    if dist[i][k] + dist[k][j] < dist[i][j]:
+                        dist[i][j] = dist[i][k] + dist[k][j]
+
+        return dist
+
+    def print_distance_matrix(self) -> None:
+        """Vypíše matici délek"""
+        nodes_sorted = sorted(self.nodes, key=lambda n: n.name)
+        dist = self.get_distance_matrix()
+
+        header = "    " + "  ".join(f"{node.name:>5}" for node in nodes_sorted)
+        print("=== MATICE DÉLEK ===")
+        print(header)
+        for i, row in enumerate(dist):
+            formatted_row = [
+                f"{val:>5}" if val != float("inf") else "  inf" for val in row
+            ]
+            print(f"{nodes_sorted[i].name:>3} " + "  ".join(formatted_row))
+        print()
+
+    # ===================| Matice předchůdců |===================
+
+    def get_predecessor_matrix(self) -> list[list[int | None]]:
+        """Vrací matici předchůdců podle Floyd–Warshallova algoritmu.
+        P[i][j] = index uzlu, který předchází j na nejkratší cestě z i.
+        """
+        nodes_sorted = sorted(self.nodes, key=lambda n: n.name)
+        n = len(nodes_sorted)
+        index = {node: i for i, node in enumerate(nodes_sorted)}
+
+        # Inicializace matic
+        dist = [[float("inf") for _ in range(n)] for _ in range(n)]
+        pred = [[None for _ in range(n)] for _ in range(n)]
+
+        for i in range(n):
+            dist[i][i] = 0
+
+        # Základní hodnoty podle hran
+        for edge in self.edges:
+            i = index[edge.source]
+            j = index[edge.target]
+            weight = getattr(edge, "weight", 1) if self.is_edge_weighted else 1
+            dist[i][j] = min(dist[i][j], weight)
+            pred[i][j] = i
+
+            if not self.is_directed:
+                dist[j][i] = min(dist[j][i], weight)
+                pred[j][i] = j
+
+        # Floyd–Warshall s předchůdci
+        for k in range(n):
+            for i in range(n):
+                for j in range(n):
+                    if dist[i][k] + dist[k][j] < dist[i][j]:
+                        dist[i][j] = dist[i][k] + dist[k][j]
+                        pred[i][j] = pred[k][j]
+
+        return pred
+
+    def print_predecessor_matrix(self) -> None:
+        """Vypíše matici předchůdců"""
+        nodes_sorted = sorted(self.nodes, key=lambda n: n.name)
+        pred = self.get_predecessor_matrix()
+
+        header = "    " + "  ".join(f"{node.name:>5}" for node in nodes_sorted)
+        print("=== MATICE PŘEDCHŮDCŮ ===")
+        print(header)
+        for i, row in enumerate(pred):
+            formatted = [
+                nodes_sorted[val].name if val is not None else "–"
+                for val in row
+            ]
+            print(f"{nodes_sorted[i].name:>3} " + "  ".join(f"{val:>5}" for val in formatted))
+        print()
