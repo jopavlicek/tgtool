@@ -68,6 +68,7 @@ class Parser:
             token = p.strip(";")
             if token.startswith(":"):
                 name = token[1:]
+                graph.is_edge_named = True
             elif token.lstrip("-").replace(".", "").isdigit():
                 try:
                     weight = int(token)
